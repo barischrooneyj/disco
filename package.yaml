@@ -1,0 +1,48 @@
+name:                disco
+version:             0.1.0.0
+github:              "barischrooneyj/disco"
+license:             BSD3
+author:              "Jeremy Barisch Rooney"
+maintainer:          "barischrooneyj@gmail.com"
+copyright:           "Jeremy Barisch Rooney (c) 2018"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Distributed Computing
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/barischrooneyj/disco#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+
+executables:
+  disco-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - disco
+
+tests:
+  disco-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - disco

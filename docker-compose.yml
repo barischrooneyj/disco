@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  disco:
+    image: disco
+    command: /usr/local/bin/disco-exe
+    tty: true
