@@ -21,6 +21,8 @@ description:         Please see the README on Github at <https://github.com/bari
 
 dependencies:
 - base >= 4.7 && < 5
+- containers
+- servant
 
 library:
   source-dirs: src
