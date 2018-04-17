@@ -1,6 +1,8 @@
 module Main where
 
-import Lib
+import           Launch (_launchNode)
+
+-- * Launch a node.
 
 main :: IO ()
-main = someFunc
+main = _launchNode

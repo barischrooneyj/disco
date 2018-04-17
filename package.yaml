@@ -7,7 +7,7 @@ maintainer:          "barischrooneyj@gmail.com"
 copyright:           "Jeremy Barisch Rooney (c) 2018"
 
 extra-source-files:
-- README.md
+- README.org
 - ChangeLog.md
 
 # Metadata used when publishing your package
@@ -21,8 +21,10 @@ description:         Please see the README on Github at <https://github.com/bari
 
 dependencies:
 - base >= 4.7 && < 5
+- bytestring
 - containers
 - servant
+- process
 
 library:
   source-dirs: src
@@ -31,6 +33,15 @@ executables:
   disco-exe:
     main:                Main.hs
     source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - disco
+  docker-exe:
+    main:                Main.hs
+    source-dirs:         docker
     ghc-options:
     - -threaded
     - -rtsopts

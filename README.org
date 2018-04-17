@@ -1,0 +1,48 @@
+#+title: disco
+#+OPTIONS: toc:nil
+
+- A *dis* tributed systems *co* nsole.
+
+Launch and manage networks of systems running across machines.
+
+(See Disco/Console.Hs)
+
+- A research tool for distributed algorithms.
+
+Quickly launch, analyse and iterate on algorithms.
+
+(See Disco/Algorithms.Hs)
+
+- A library for distributed data.
+
+Treat data as easily as if it was on one machine.
+
+(See Disco/Data.Hs)
+
+* Installing and running
+
+Install [[https://www.docker.com/get-docker][Docker]], [[https://docs.docker.com/compose][Docker Compose]], [[https://docs.haskellstack.org/en/stable/README][Stack]]. On macOS you can do:
+
+#+begin_src bash
+  brew cask install docker
+  brew install docker-compose haskell-stack
+#+end_src
+
+Clone the project and install Haskell dependencies:
+
+#+begin_src bash
+  git clone git@github.com:barischrooneyj/disco && cd disco
+  stack build --install-ghc
+#+end_src
+
+Start the Docker daemon:
+
+#+begin_src bash
+  open -a docker
+#+end_src
+
+Open the disco console:
+
+#+begin_src bash
+  stack exec disco
+#+end_src

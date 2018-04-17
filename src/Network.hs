@@ -1,36 +1,75 @@
+{-# LANGUAGE DuplicateRecordFields #-}
+
 module Network where
 
-import Data.Set (Set)
+-- * A model of a network and its nodes.
 
-type Message = String
-type ID = Int
+import           Data.ByteString (ByteString)
+import           Data.Set        (Set)
+import qualified Data.Set        as Set
 
--- | A protocol abstraction for message passing.
-data Messaging = Messaging {
-  -- ^ Attempt to send a message to the node with given ID.
-  send :: Message -> ID -> IO (),
-  -- ^ Listen for incoming messages and run a handler on each.
-  recv :: (Message -> ID -> IO ()) -> IO ()
+-- ** An example network.
+
+-- | A hello world-style 'Node'. Will run on a Docker container on your machine.
+helloWorldOnDocker = Node {
+  _launch = Docker,
+  _exe = Git { _url = "https://github.com/barischrooneyj/hijohn", _exe = "hijohn-exe" },
+  _messaging = 
   }
 
--- | A node consists of an identifier and some IO function to run (which
--- receives a message passing abstraction as an argument).
-data Node = Node { nid :: ID, f :: Messaging -> IO () }
+-- | A triangle shaped network of hello world nodes.
+example = Network {
+  _nodes = Set.fromList [
+      helloWorldOnDocker, helloWorldOnDocker, helloWorldOnDocker ]
+                  }
+
+-- ** The data types.
+
+-- | A network is simply a set of nodes and edges.
+data Network = Network { _nodes :: Set Node, _edges :: Set Edge }
+
+-- | A simple type to compare nodes with.
+type NodeID = Int
+
+-- | A node is an independent system in a network.
+data Node = Node {
+  -- ^ Unique identifier.
+  _id        :: NodeID,
+  -- ^ How to launch the node.
+  _launch    :: Launch,
+  -- ^ The executable to run.
+  _exe       :: Exe,
+  -- ^ A simple message passing interface.
+  _messaging :: Messaging
+  }
 
 -- | Nodes are equal if they have the same identifier.
 instance Eq Node where
-  a == b = nid a == nid b
+  a == b = _id a == _id b
 
--- | An edge is a directed channel between two nodes.
-data Edge = Edge { from :: ID, to :: ID }
+-- | An edge is a directed channel from one node to another.
+data Edge = Edge { _from :: NodeID, _to :: NodeID }
 
--- | Edges are equal if they point the same direction between the same nodes.
+-- | Two edges are equal if they point the same way between the same nodes.
 instance Eq Edge where
-  a == b = from a == from b && to a == to b
+  a == b = _from a == _from b && _to a == _to b
 
--- | A network is a set of nodes and a set of edges.
-data Network = Network { nodes :: Set Node, edges :: Set Edge }
+-- | Currently we only support Docker containers on host-machines.
+data Launch = Docker
 
--- | Launch a complete (fully connected) network topology of nodes.
--- launchCompleteTopology :: Set Node -> Hardware -> IO ()
--- launchCompleteTopology = 
+-- | The executable to run on a node.
+data Exe =
+    Git { _url :: String, _exe :: String }
+  | Hackage { _package :: String, _exe :: String }
+
+-- | A simple message passing interface. Controlling these functions allows us
+-- to artificially modify the topology and performance of the network.
+data Messaging = Messaging {
+  -- ^ Attempt to send a message to a node.
+  _send :: Message -> NodeID -> IO (),
+  -- ^ Register a handler for incoming messages.
+  _recv :: (Message -> NodeID -> IO ()) -> IO ()
+  }
+
+-- | You can parse/serialize messages yourself.
+type Message = ByteString
