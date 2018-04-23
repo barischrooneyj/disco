@@ -4,8 +4,8 @@ module Network where
 
 -- * A model of a network and its nodes.
 
-import           Data.Set        (Set)
-import qualified Data.Set        as Set
+import           Data.Set (Set)
+import qualified Data.Set as Set
 
 -- ** An example network.
 
@@ -22,18 +22,18 @@ helloWorldOnDocker = Node {
 
 -- | A triangle one-way network of hello world nodes.
 exampleNetwork = Network {
-  _nodes = Set.fromList [
+  _nodes = [
       helloWorldOnDocker, helloWorldOnDocker, helloWorldOnDocker ],
   _edges = CompleteGraph
   }
 
 -- ** The data types.
 
--- | A network is simply a set of nodes and edges.
-data Network = Network { _nodes :: Set Node, _edges :: Edges }
+-- | A network is simply some of nodes and edges.
+data Network = Network { _nodes :: [Node], _edges :: Edges }
 
 -- | Either a set of edges or a shorthand definition.
-data Edges = Edges (Set Edges) | CompleteGraph
+data Edges = Edges [Edges] | CompleteGraph
 
 -- | A simple type to compare nodes with.
 type NodeID = Int
@@ -41,11 +41,11 @@ type NodeID = Int
 -- | A node is an independent system in a network.
 data Node = Node {
   -- ^ Unique identifier.
-  _id        :: Maybe NodeID,
+  _id     :: Maybe NodeID,
   -- ^ Which executable to run.
-  _exe       :: Exe,
+  _exe    :: Exe,
   -- ^ Method of launching the node.
-  _launch    :: Launch
+  _launch :: Launch
   -- ^ A simple message passing interface.
   -- _messaging :: Messaging
   }
@@ -70,6 +70,7 @@ data Launch = Docker
 data Exe =
     Git { _url :: String, _exe :: String }
   | Hackage { _package :: String, _exe :: String }
+  deriving (Read, Show)
 
 -- | A simple message passing interface available to nodes.
 --

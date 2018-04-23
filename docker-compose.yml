@@ -1,6 +1,21 @@
 version: '3'
 
 services:
-  disco:
-    image: hello-world
+  disco-docker-1:
+    image: disco-docker
+    environment: 
+      - DISCODOCKERLAUNCH=Git {_url = "https://github.com/barischrooneyj/hijohn", _exe = "hijohn-exe"}
+    command: /usr/local/bin/disco-docker-exe
+    tty: true
+  disco-docker-2:
+    image: disco-docker
+    environment: 
+      - DISCODOCKERLAUNCH=Git {_url = "https://github.com/barischrooneyj/hijohn", _exe = "hijohn-exe"}
+    command: /usr/local/bin/disco-docker-exe
+    tty: true
+  disco-docker-3:
+    image: disco-docker
+    environment: 
+      - DISCODOCKERLAUNCH=Git {_url = "https://github.com/barischrooneyj/hijohn", _exe = "hijohn-exe"}
+    command: /usr/local/bin/disco-docker-exe
     tty: true
