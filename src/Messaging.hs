@@ -1,7 +1,9 @@
 {-# LANGUAGE DataKinds     #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Listen where
+module Messaging where
+
+-- | Instances of the Messaging data type.
 
 import           Servant.API
 

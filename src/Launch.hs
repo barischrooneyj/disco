@@ -1,31 +1,63 @@
 module Launch where
 
-import           Data.Set       (Set)
-import qualified Data.Set       as Set
-import           System.Process
+-- * Methods of launching networks and nodes.
 
-import           Network        (Launch (..), Messaging, Network (..),
-                                 Node (..))
+import           Data.Maybe       (fromJust)
+import           Data.Set         (Set)
+import qualified Data.Set         as Set
+import qualified System.Directory as Dir
+import           System.FilePath  ((</>))
+-- import           System.Process
 
--- * Launch nodes and networks.
+import           Network          (Edges (..), Launch (..), Network (..),
+                                   Node (..))
 
 -- | Launch the given network!
 launchNetwork :: Network -> IO ()
-launchNetwork network = do
-  print "NOTE: Only complete tautology implemented"
-  launchCompleteTautology $ _nodes network
+launchNetwork network' = do
+  let network = nodesHaveUniqueIDs network'
+  -- n <- nodesHaveUniqueIDs network
+  case _edges network of
+    CompleteGraph  -> launchCompleteGraph $ _nodes network
+    Edges setEdges -> print "NOTE: Only complete graph implemented"
+
+-- | Maybe the network but all nodes have unique IDs.
+--
+-- Already given IDs will not be altered. If there is a duplicate the result is
+-- Nothing.
+nodesHaveUniqueIDs :: Network -> Network
+nodesHaveUniqueIDs network =
+  let newNodes = map (\(i, n) -> n { _id = Just i }) nodesZip
+      nodesZip = zip [1..] oldNodes
+      oldNodes = Set.toList $ _nodes network
+  in network { _nodes = Set.fromList newNodes}
+
+-- | Assign IDs to each node, if they don't have one.
+dockerfileHead = unlines ["version: '3'", "", "services:"]
 
 -- | Launch a complete (fully connected) network topology of nodes.
-launchCompleteTautology :: Set Node -> IO ()
-launchCompleteTautology nodes = do
-  mapM launchNode $ Set.toList nodes
+launchCompleteGraph :: Set Node -> IO ()
+launchCompleteGraph nodes = do
+  let dockerfile = foldl
+        (\df n -> dockerfileWithNode n df) dockerfileHead $ Set.toList nodes
+  print dockerfile
+  home <- Dir.getHomeDirectory
+  let outFile = home </> "cs/disco/_docker_test.yaml"
+  print outFile
+  writeFile outFile dockerfile
+  print =<< readFile outFile
   print "Launched complete tautology!"
 
--- | Launch a node into the sky!
-launchNode :: Node -> IO ()
-launchNode node = do
+-- | A Dockerfile string with a node added.
+dockerfileWithNode :: Node -> String -> String
+dockerfileWithNode node dockerfile =
   case _launch node of
-    Docker -> print "foo"
+    Docker -> dockerfile ++ unlines [
+      "  disco-" ++ show (fromJust $ _id node) ++ ":",
+      "    image: disco",
+      "    command: /usr/local/bin/disco-exe",
+      "    tty: true"
+      ]
 
 -- ** Docker
 

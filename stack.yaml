@@ -50,14 +50,14 @@ extra-deps: []
 # Extra package databases containing global packages
 # extra-package-dbs: []
 
-docker:
-    auto-pull: true
-    repo: fpco/stack-build
+# docker:
+#     auto-pull: true
+#     repo: fpco/stack-build
 
-image:
-  containers:
-  - name: disco
-    base: fpco/stack-build
+# image:
+#   containers:
+#   - name: disco
+#     base: fpco/stack-build
 
 # Control whether we use the GHC we find on the path
 # system-ghc: false
