@@ -16,7 +16,8 @@ helloWorldOnDocker = Node {
   -- ^ Launch the node as a locally hosted Docker container.
   _launch = Docker,
   -- ^ Directions to the executable to run.
-  _exe = Git { _url = "https://github.com/barischrooneyj/hijohn", _exe = "hijohn-exe" }
+  -- _exe = Git { _url = "https://github.com/barischrooneyj/hijohn", _exe = "hijohn-exe" }
+  _exe = Default
   -- _messaging =
   }
 
@@ -66,10 +67,14 @@ instance Eq Edge where
 -- | Currently we only support locally hosted Docker containers.
 data Launch = Docker
 
--- | An executable for a node to run.
+-- | Information on an executable for a node to run.
 data Exe =
+  -- ^ Download and install an executable from a git URL.
     Git { _url :: String, _exe :: String }
+  -- ^ Download and install an executable from Hackage.
   | Hackage { _package :: String, _exe :: String }
+  -- ^ Inform the node to run the default executable.
+  | Default
   deriving (Read, Show)
 
 -- | A simple message passing interface available to nodes.

@@ -55,6 +55,7 @@ docker:
 image:
   containers:
   - name: disco-docker
+    executables: [disco-docker-exe]
     base: fpco/stack-build
 
 # Control whether we use the GHC we find on the path

@@ -4,6 +4,7 @@ version:             0.1.0.0
 dependencies:
 - base >= 4.7 && < 5
 - disco
+- process
 
 library:
   source-dirs: src
