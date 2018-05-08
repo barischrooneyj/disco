@@ -5,19 +5,55 @@
 
 Launch and manage networks of systems running across machines.
 
-(See Disco/Console.Hs)
-
 - A research tool for distributed algorithms.
 
 Quickly launch, analyse and iterate on algorithms.
 
-(See Disco/Algorithms.Hs)
-
 - A library for distributed data.
 
-Treat data as easily as if it was on one machine.
+Provide abstractions, maybe just examples, of dealing with distributed data.
+Distributed STM exists, can we integrate it, should we? What about distributed
+FRP as hinted at recently on this reddit [[https://www.reddit.com/r/haskell/comments/8g73hv/reactivebanana_or_other_frp_lib_for_networking/][thread]]. What about decentralized data?
 
-(See Disco/Data.Hs)
+* Overview
+
+We describe a network as a graph of nodes and edges. The definition of a node is
+as follows:
+
+#+begin_src haskell
+-- | A node is an independent system in a network.
+data Node = Node {
+  -- ^ Unique identifier.
+  _id     :: Maybe NodeID,
+  -- ^ Which executable to run.
+  _exe    :: Exe,
+  -- ^ Method of launching the node.
+  _launch :: Launch
+  -- ^ A simple message passing interface.
+  _messaging :: Messaging
+}
+#+end_src
+
+I recommend looking at [[src/Network.hs]] for the most important definitions.
+
+Nodes are launched based on the given =Launch= information, currently we only support
+running a node on a local Docker container (one per node) but launching nodes on other
+services is a main goal. The =Exe= information describes which program to run, currently
+we only support a node running a default executable, which is editable in the subfolder
+=disco-docker=. We would like to support installation from Hackage, GitHub etc. and
+also support binaries maybe (maybe start with Docker Hub).
+
+The above has described the core (and very simple architecture) of what is
+necessary to support the aims at the top of this file. Additionally to be a
+management system we need to support the manipulation of nodes (apart from just
+starting the network) and it would be nice to have a graphical system (maybe
+with [[https://hackage.haskell.org/package/brick][brick]] including a network overview/map. To further achieve the distributed
+algorithms research goal we need to implement some algorithms, I would like to
+provide some combinators that allow these algorithms to presented as naturally
+as possible, sets of statements/rules perhaps, and provide functions like
+=neighbours= etc. We can start with a simple ring election algorithm maybe. For
+message passing, the integration of an Erlang-style message passing library like
+[[https://hackage.haskell.org/package/courier][courier]] may be useful.
 
 * Installing and running
 
@@ -35,7 +71,7 @@ Clone the project and install Haskell dependencies:
   stack build --install-ghc
 #+end_src
 
-Start the Docker daemon:
+Start the Docker daemon, on macOS this is:
 
 #+begin_src bash
   open -a docker
