@@ -22,55 +22,57 @@ for the most important definitions used by this library. The file is quite short
 and nothing fancy is going on.
 
 #+begin_src haskell
--- | A node is an independent system in a network.
+-- | A node represents a program in a network.
 data Node = Node {
   -- ^ A unique identifier.
-  _id     :: NodeID,
+  _id        :: NodeID,
   -- ^ The program to run.
-  _exe    :: Exe,
+  _exe       :: Exe,
   -- ^ Where to start the node.
-  _launch :: Launch,
+  _service   :: Service,
   -- ^ Information to enable high-level messaging.
   _messaging :: Messaging
 }
 #+end_src
 
-Nodes can be started based on the given =Launch= information, currently we only
+Nodes are started based on the given =Service= information, currently we only
 support starting a node on a local Docker container (one per node) but starting
-nodes on other services is a main goal. When we talk of starting a node we mean
-executing a small boot program somewhere which is passed the =NodeID=, =Exe=,
-and =Messaging= information.
+nodes on other services is a main goal. The =Service= is responsible for running
+a small boot program somewhere which is passed the =NodeID=, =Exe=, and
+=Messaging= information.
 
-The =Exe= information describes which program to run, currently we only support
-running a default executable, which you can find in the folder =disco-docker=.
-We would like to support installation from Hackage, GitHub etc. and to support
-binaries (maybe start with Docker Hub).
+The =Exe= describes which program to run, currently we only support running a
+default executable, which you can find in the folder =disco-docker=. We would
+like to support installation from Hackage, GitHub etc. and to support binaries
+(maybe start with Docker Hub).
 
-The =Messaging= information configures a transport layer for the use of
-high-level messaging functions that the disco library provides, such as
-=neighbours=. The use of this transport layer allows us to implement an
+The =Messaging= configures a transport layer for the network so the running
+program can use high-level messaging functions that the disco library provides,
+such as =neighbours=. The use of this transport layer allows us to implement an
 artificial network topology and analyze network characteristics such as
 message/bit complexity.
 
 ** Network
    
 We define a network as consisting of nodes and edges. The edges define an
-artificial network topology. The =Launch= information of a node controls where
+artificial network topology. The =Service= information of a node controls where
 it runs, and thus the physical network topology. When we talk simply of "network
 topology" we mean the artificial network topology.
 
 #+begin_src haskell
-data Network = Network { _nodes :: [Node], _edges :: Edges }
+  data Network = Network { _nodes :: [Node], _edges :: Edges }
 #+end_src
 
 The =Edges= field provides us with the option of specifying the network
 topology. Either as a set of edges or as a network topology shorthand. The
 following code shows the specification of a simple ring consisting of five of
-the same node. The node simply prints hello world and is started on a local
-Docker container.
+the same hello world node. Each node is started on a local Docker container.
 
 #+begin_src haskell
-exampleNetwork = Network { _nodes = replicate 5 helloWorldOnDocker, _edges = Ring }
+  exampleNetwork = Network { _nodes = replicate 5 helloWorldOnDocker, _edges = Ring }
+
+  runExample :: IO ()
+  runExample = startNetwork exampleNetwork
 #+end_src
 
 * Aims

@@ -12,6 +12,6 @@ type UserAPI = "users" :> QueryParam "sortby" SortBy :> Get '[JSON] [User]
 data SortBy = Age | Name
 
 data User = User {
-  name              :: String,
-  age               :: Int
+  name :: String,
+  age  :: Int
 }

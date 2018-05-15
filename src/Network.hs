@@ -4,50 +4,46 @@ module Network where
 
 -- * A model of a network and its nodes.
 
-import           Data.Set (Set)
-import qualified Data.Set as Set
-
--- ** An example network.
+-- ** Examples of data types.
 
 -- | A hello world-style example node.
+helloWorldOnDocker :: Node
 helloWorldOnDocker = Node {
-  -- ^ Note that setting an ID is optional, we can assign one automatically.
+  -- ^ We will assign a unique one at start.
   _id = Nothing,
-  -- ^ Launch the node as a locally hosted Docker container.
-  _launch = Docker,
-  -- ^ Directions to the executable to run.
-  -- _exe = Git { _url = "https://github.com/barischrooneyj/hijohn", _exe = "hijohn-exe" }
+  -- ^ Start the node in a local Docker container.
+  _service = LocalDocker,
+  -- ^ The program to run.
   _exe = Default
-  -- _messaging =
   }
 
--- | A triangle one-way network of hello world nodes.
+-- | A complete graph of 5 of the same hello world node.
+exampleNetwork :: Network
 exampleNetwork = Network {
-  _nodes = [
-      helloWorldOnDocker, helloWorldOnDocker, helloWorldOnDocker ],
+  _nodes = replicate 1 helloWorldOnDocker,
   _edges = CompleteGraph
   }
 
--- ** The data types.
+-- ** The data types necessary for a network.
 
 -- | A network is simply some of nodes and edges.
 data Network = Network { _nodes :: [Node], _edges :: Edges }
 
 -- | Either a set of edges or a shorthand definition.
-data Edges = Edges [Edges] | CompleteGraph
+data Edges = Edges [Edges] | CompleteGraph | Ring
 
 -- | A simple type to compare nodes with.
 type NodeID = Int
 
--- | A node is an independent system in a network.
+-- | A node represents a program in a network.
 data Node = Node {
-  -- ^ Unique identifier.
-  _id     :: Maybe NodeID,
-  -- ^ Which executable to run.
-  _exe    :: Exe,
-  -- ^ Method of launching the node.
-  _launch :: Launch
-  -- ^ A simple message passing interface.
+  -- ^ A unique identifier.
+  _id      :: Maybe NodeID,
+  -- ^ The program to run.
+  _exe     :: Exe,
+  -- ^ Where to start the node.
+  _service :: Service
+  -- ^ Information to enable high-level messaging.
   -- _messaging :: Messaging
   }
 
@@ -65,7 +61,7 @@ instance Eq Edge where
   a == b = _from a == _from b && _to a == _to b
 
 -- | Currently we only support locally hosted Docker containers.
-data Launch = Docker
+data Service = LocalDocker
 
 -- | Information on an executable for a node to run.
 data Exe =
