@@ -3,9 +3,9 @@
 
 module Messaging where
 
--- | Instances of the Messaging data type.
-
 import           Servant.API
+
+-- * Instances of the Messaging data type.
 
 type UserAPI = "users" :> QueryParam "sortby" SortBy :> Get '[JSON] [User]
 

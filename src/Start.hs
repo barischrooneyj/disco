@@ -17,23 +17,19 @@ import qualified System.Process.Typed as Proc
 
 import           Network              (Edges (..), Network (..), Node (..),
                                        Service (..))
-import           Util                 (applyUniqueIDs)
-
 
 -- | Start the given network!
 startNetwork :: Network -> IO ()
-startNetwork network = do
-  let uniqueNodeNetwork = applyUniqueIDs network
-  case _edges uniqueNodeNetwork of
-    CompleteGraph   -> startCompleteGraph $ _nodes uniqueNodeNetwork
-    Ring            -> print "NOTE: Ring not implemented"
+startNetwork network =
+  case _edges network of
+    CompleteGraph   -> startCompleteGraph $ _nodes network
+    UndirectedRing  -> print "NOTE: Undirected ring not implemented"
     Edges _setEdges -> print "NOTE: Set of edges not implemented"
-
 
 startCompleteGraph :: [Node] -> IO ()
 startCompleteGraph nodes = do
   let nodeIds = ["node-" ++ show (fromJust $ _id node) | node <- nodes]
-      clientOpts = defaultClientOpts { apiVer = pack "v1.37" }
+      clientOpts = defaultClientOpts -- { apiVer = pack "v1.37" }
   print nodeIds
   h <- defaultHttpHandler
   version <- runDockerT (clientOpts, h) getDockerVersion
@@ -76,8 +72,6 @@ startCompleteGraph_ nodes = do
 
 
 -- | A Dockerfile string with a node added.
---
--- We expect the node to have an ID.
 dockerfileWithNode :: String -> Node -> String
 dockerfileWithNode dockerfile node =
   case _service node of
@@ -89,5 +83,6 @@ dockerfileWithNode dockerfile node =
       "    command: /usr/local/bin/disco-docker-exe",
       "    tty: true"
       ]
+    LocalProcess -> "NOTE: We do not yet support running the local process."
 
 

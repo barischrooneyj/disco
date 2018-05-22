@@ -1,9 +1,9 @@
 module Main where
 
-import           Network (exampleNetwork)
+import           Network (helloWorldNetwork)
 import           Start   (startNetwork)
 
 -- * Start the example network.
 
 main :: IO ()
-main = startNetwork exampleNetwork
+main = startNetwork helloWorldNetwork
