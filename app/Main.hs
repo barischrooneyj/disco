@@ -1,7 +1,7 @@
 module Main where
 
-import           Network (helloWorldNetwork)
-import           Start   (startNetwork)
+import           HelloWorld (helloWorldNetwork)
+import           Start      (startNetwork)
 
 -- * Start the example network.
 

@@ -3,13 +3,6 @@ module Start where
 -- * Start networks and nodes on services.
 
 import           Data.Maybe           (fromJust)
-import           Data.Text            (pack)
-import           Docker.Client.Api    (createContainer, getDockerVersion)
-import           Docker.Client.Http   (defaultHttpHandler, runDockerT)
-import           Docker.Client.Types  (CreateOpts (..), apiVer, baseUrl,
-                                       defaultClientOpts,
-                                       defaultContainerConfig,
-                                       defaultHostConfig)
 import qualified System.Directory     as Dir
 import           System.Exit          (ExitCode (..))
 import           System.FilePath      ((</>))
@@ -23,34 +16,21 @@ startNetwork :: Network -> IO ()
 startNetwork network =
   case _edges network of
     CompleteGraph   -> startCompleteGraph $ _nodes network
+    -- | Old Docker Compose version.
+    -- CompleteGraph   -> startCompleteGraphOld $ _nodes network
     UndirectedRing  -> print "NOTE: Undirected ring not implemented"
     Edges _setEdges -> print "NOTE: Set of edges not implemented"
 
+-- | Start a complete graph.
+--
+-- Currently this is done by starting all nodes on the service of the first
+-- node. This works because we know we have one service currently. When we have
+-- multiple services implemented we will ask each service to start the
+-- respective set of nodes, at this point our messaging functionality must be
+-- able to handle service boundaries.
 startCompleteGraph :: [Node] -> IO ()
-startCompleteGraph nodes = do
-  let nodeIds = ["node-" ++ show (fromJust $ _id node) | node <- nodes]
-      clientOpts = defaultClientOpts -- { apiVer = pack "v1.37" }
-  print nodeIds
-  h <- defaultHttpHandler
-  version <- runDockerT (clientOpts, h) getDockerVersion
-  print version
-
-  -- We map startNode over each node, startnode is currently trying to communicate
-  -- with the docker daemon, this needs to be debugged, looking at response/request.
-
-  mapM_ (startNode h) nodes
-
-  where startNode httpHandler _unused_node = do
-          let containerConfig' = defaultContainerConfig $ pack "disco-docker"
-              -- containerName = pack $ "disco-docker" ++ show (fromJust $ _id node)
-              clientOpts = defaultClientOpts {
-                apiVer = pack "v1.37",
-                baseUrl = pack "/v.137"
-                                             }
-              createOpts = CreateOpts containerConfig' defaultHostConfig
-              createCommand = createContainer createOpts Nothing -- (Just $ containerName)
-          container <- runDockerT (clientOpts, httpHandler) createCommand
-          print container
+startCompleteGraph []          = print "No nodes to start complete graph"
+startCompleteGraph nodes@(n:_) = startNodes (_service n) nodes
 
 -- ** Old Docker Compose code.
 
@@ -58,10 +38,9 @@ startCompleteGraph nodes = do
 dockerfileHead :: String
 dockerfileHead = unlines ["version: '3'", "", "services:"]
 
-
 -- | Launch a complete (fully connected) network topology of nodes.
-startCompleteGraph_ :: [Node] -> IO ()
-startCompleteGraph_ nodes = do
+startCompleteGraphOld :: [Node] -> IO ()
+startCompleteGraphOld nodes = do
   let dockerfile = foldl dockerfileWithNode dockerfileHead nodes
   outFile <- (</> "cs/disco/docker-compose.yml") <$> Dir.getHomeDirectory
   writeFile outFile dockerfile
@@ -70,12 +49,10 @@ startCompleteGraph_ nodes = do
     Proc.proc "docker-compose" ["up"]
   print $ case e of { ExitSuccess -> stdout; ExitFailure _ -> stderr }
 
-
 -- | A Dockerfile string with a node added.
 dockerfileWithNode :: String -> Node -> String
 dockerfileWithNode dockerfile node =
-  case _service node of
-    LocalDocker -> dockerfile ++ unlines [
+  dockerfile ++ unlines [
       "  disco-docker-" ++ show (fromJust $ _id node) ++ ":",
       "    image: disco-docker",
       "    environment:",
@@ -83,6 +60,3 @@ dockerfileWithNode dockerfile node =
       "    command: /usr/local/bin/disco-docker-exe",
       "    tty: true"
       ]
-    LocalProcess -> "NOTE: We do not yet support running the local process."
-
-
