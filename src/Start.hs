@@ -30,7 +30,7 @@ startNetwork network =
 -- able to handle service boundaries.
 startCompleteGraph :: [Node] -> IO ()
 startCompleteGraph []          = print "No nodes to start complete graph"
-startCompleteGraph nodes@(n:_) = startNodes (_service n) nodes
+startCompleteGraph nodes@(n:_) = _startNodes (_service n) nodes
 
 -- ** Old Docker Compose code.
 

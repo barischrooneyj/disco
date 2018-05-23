@@ -4,40 +4,37 @@ import           Data.Maybe          (fromJust)
 import           Data.Text           (pack)
 import           Docker.Client.Api   (createContainer, getDockerVersion)
 import           Docker.Client.Http  (defaultHttpHandler, runDockerT)
-import           Docker.Client.Types (CreateOpts (..), apiVer, baseUrl,
-                                      defaultClientOpts, defaultContainerConfig,
-                                      defaultHostConfig)
+import           Docker.Client.Types (CreateOpts (..), defaultClientOpts,
+                                      defaultContainerConfig, defaultHostConfig)
 
 import           Network             (Node (..), Service (..))
 
--- | Have not yet moved implementation to here.
--- Currently in Start.hs.
+-- | A service that runs nodes in a local Docker container.
+--
+-- When using this service the Docker daemon must be accessible over TCP on port
+-- 2375. Due to a bug on Docker for macOS (below) you will have to run:
+--
+--   socat TCP-LISTEN:2375,reuseaddr,fork,bind=127.0.0.1 UNIX-CLIENT:/var/run/docker.sock
+--
+--   https://github.com/docker/for-mac/issues/1156#issuecomment-273764881
 localDocker :: Service
-localDocker = Service { startNodes = startNodes' }
+localDocker = Service { _startNodes = startNodes }
 
-startNodes' :: [Node] -> IO ()
-startNodes' nodes = do
-  let nodeIds = ["node-" ++ show (fromJust $ _id node) | node <- nodes]
-      clientOpts = defaultClientOpts -- { apiVer = pack "v1.37" }
-  print nodeIds
-  h <- defaultHttpHandler
-  version <- runDockerT (clientOpts, h) getDockerVersion
-  print version
+startNodes :: [Node] -> IO ()
+startNodes nodes = do
+  h       <- defaultHttpHandler
 
-  -- We map startNode over each node, startnode is currently trying to communicate
-  -- with the docker daemon, this needs to be debugged, looking at response/request.
-
+  -- | Example running a Docker command.
+  version <- runDockerT (defaultClientOpts, h) getDockerVersion
+  putStrLn $ "\nVersion: " ++ show version
   mapM_ (startNode h) nodes
 
-  where startNode httpHandler _unused_node = do
+  where startNode httpHandler node = do
           let containerConfig' = defaultContainerConfig $ pack "disco-docker"
-              -- containerName = pack $ "disco-docker" ++ show (fromJust $ _id node)
-              clientOpts = defaultClientOpts {
-                apiVer = pack "v1.37",
-                baseUrl = pack "/v.137"
-                                             }
+              containerName = pack $ "disco-docker" ++ show (fromJust $ _id node)
               createOpts = CreateOpts containerConfig' defaultHostConfig
-              createCommand = createContainer createOpts Nothing -- (Just $ containerName)
-          container <- runDockerT (clientOpts, httpHandler) createCommand
-          print container
+              createCommand = createContainer createOpts $ Just containerName
+          container <- runDockerT (defaultClientOpts, httpHandler) createCommand
+          putStrLn $ "\nCommand: " ++ show createOpts
+          putStrLn $ "\nContainer: " ++ show container
 

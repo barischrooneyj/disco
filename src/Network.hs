@@ -49,7 +49,7 @@ data Edges =
 data Edge = Edge { _from :: NodeID, _to :: NodeID }
 
 -- | A service is capable of running nodes.
-newtype Service = Service { startNodes :: [Node] -> IO () }
+newtype Service = Service { _startNodes :: [Node] -> IO () }
 
 -- | Description of an executable that a node can run.
 data Exe =
