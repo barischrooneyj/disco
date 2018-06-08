@@ -2,6 +2,10 @@ module Run where
 
 -- * Run a node's executable.
 
+-- | We want to separate out anything not related to the current service. This
+-- service-independent code will be disco-boot and should be launched by the
+-- boot program directly and passed any service-specific functions.
+
 import qualified System.Environment as Env
 import           System.Process
 
@@ -16,18 +20,19 @@ run = do
 
 -- | Run the given executable.
 runExe :: Exe -> IO ()
-runExe exe = do
+runExe exe =
   case exe of
     Git url exe' -> do
-      putStrLn "INFO: Git executables not supported"
+      putStrLn "NOTE: Git executables not supported"
       clone <- readProcess ("git clone " ++ url) [] []
       print clone
-    Hackage _ _ -> putStrLn "INFO: Hackage executables not supported"
-    Default -> do
-      putStrLn "INFO: Launching default executable"
-      runDefault
+    Hackage _ _ -> putStrLn "NOTE: Hackage executables not supported"
+    ServiceDefault -> do
+      putStrLn "NOTE: Launching default executable"
+      runServiceDefault
+    EAlgorithm alg -> putStrLn $ "NOTE: We cannot run algorithm:" ++ show alg
 
 -- | Run an informative example as a default.
-runDefault :: IO ()
-runDefault = do
+runServiceDefault :: IO ()
+runServiceDefault =
   putStrLn "Node finished running"

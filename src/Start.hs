@@ -1,6 +1,9 @@
 module Start where
 
 -- * Start networks and nodes on services.
+--
+-- NOTE: This code is hacky and will be changed soon, don't bother investing
+-- much time here.
 
 import           Data.Maybe           (fromJust)
 import qualified System.Directory     as Dir
@@ -15,9 +18,9 @@ import           Network              (Edges (..), Network (..), Node (..),
 startNetwork :: Network -> IO ()
 startNetwork network =
   case _edges network of
-    CompleteGraph   -> startCompleteGraph $ _nodes network
+    -- CompleteGraph   -> startCompleteGraph $ _nodes network
     -- | Old Docker Compose version.
-    -- CompleteGraph   -> startCompleteGraphOld $ _nodes network
+    CompleteGraph   -> startCompleteGraphOld $ _nodes network
     UndirectedRing  -> print "NOTE: Undirected ring not implemented"
     Edges _setEdges -> print "NOTE: Set of edges not implemented"
 
@@ -32,7 +35,7 @@ startCompleteGraph :: [Node] -> IO ()
 startCompleteGraph []          = print "No nodes to start complete graph"
 startCompleteGraph nodes@(n:_) = _startNodes (_service n) nodes
 
--- ** Old Docker Compose code.
+-- ** OLD!! Docker Compose code.
 
 -- | Assign IDs to each node, if they don't have one.
 dockerfileHead :: String

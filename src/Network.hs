@@ -4,6 +4,8 @@ module Network where
 
 -- * A model of a network and its nodes.
 
+import           Algorithm (Algorithm)
+
 -- | A network consists simply of nodes and edges.
 data Network = Network { _nodes :: [Node], _edges :: Edges }
 
@@ -49,6 +51,9 @@ data Edges =
 data Edge = Edge { _from :: NodeID, _to :: NodeID }
 
 -- | A service is capable of running nodes.
+--
+-- On boot the service should offload to the disco-boot function which is
+-- capable of running the different 'Exe's.
 newtype Service = Service { _startNodes :: [Node] -> IO () }
 
 -- | Description of an executable that a node can run.
@@ -59,7 +64,11 @@ data Exe =
   | Hackage { _package :: String, _exe :: String }
   -- | The node will run its service's default executable.
   | ServiceDefault
+  -- | A serializable distributed algorithm to run.
+  | EAlgorithm Algorithm
   deriving (Read, Show)
+
+-- ** NOTE: The code below is currently NOT used.
 
 -- | A message passing interface that adheres to the network topology.
 data Messaging = Messaging {

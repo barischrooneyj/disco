@@ -1,23 +1,29 @@
-#+title: disco
-#+OPTIONS: toc:nil
+#+TITLE: Disco
+#+SUBTITLE: A distributed algorithms research tool written in Haskell.
+#+LATEX_HEADER: \usepackage{parskip}
 
-- A *dis* tributed systems management *co* nsole.
+* Aims
+
+The primary aim of this project is to facilitate **distributed algorithms
+research**. We want to enable researchers to write distributed algorithms in a
+high-level DSL (domain-specific language) embedded in Haskell.
+
+To support this primary aim, we provide a **distributed systems management
+console**. This enables researchers to quickly launch, analyze and iterate
+distributed algorithms.
  
-Manage networks of nodes running across services.
- 
-- A distributed algorithms research tool.
- 
-Quickly launch, analyse and iterate on algorithms.
+Finally, as a personal aim. I would like to investigate abstractions built upon
+distributed system primitives that allow us to treat remote data as easily as
+local data.
 
-- A high level distributed data library.
+* Technical Overview
 
-Explore abstractions of distributed data, like DSTM and DFRP.
-
-* Overview
+Here we provide a brief overview of the types used by Disco. In the future all
+documentation will likely be moved to a =Tutorial.hs= file.
 
 ** Node
    
-The definition of a node is given below. I recommend looking at [[src/Network.hs]]
+The definition of a node is given below. I recommend looking at [[https://github.com/barischrooneyj/disco/blob/master/src/Network.hs][src/Network.hs]]
 for the most important definitions used by this library. The file is quite short
 and nothing fancy is going on.
 
@@ -35,22 +41,21 @@ data Node = Node {
 }
 #+end_src
 
-Nodes are started based on the given =Service= information, currently we only
-support starting a node on a local Docker container (one per node) but starting
-nodes on other services is a main goal. The =Service= is responsible for running
-a small boot program somewhere which is passed the =NodeID=, =Exe=, and
-=Messaging= information.
+Where nodes are started is based on the given =Service= information, currently
+we only support starting a node on a local Docker container (one per node) but
+starting nodes on other services is high priority. The service will run a
+lightweight boot program which is passed the =NodeID=, =Exe=, and =Messaging=
+information.
 
-The =Exe= describes which program to run, currently we only support running a
-default executable, which you can find in the folder =disco-docker=. We would
-like to support installation from Hackage, GitHub etc. and to support binaries
-(maybe start with Docker Hub).
+The =Exe= determines which program to run, this program can be a distributed
+algorithm or we can inform the service to run a default program. We would
+additionally like to support installation from Hackage, GitHub etc. and to
+support binaries (maybe start with Docker Hub).
 
-The =Messaging= configures a transport layer for the network so the running
-program can use high-level messaging functions that the disco library provides,
-such as =neighbours=. The use of this transport layer allows us to implement an
-artificial network topology and analyze network characteristics such as
-message/bit complexity.
+The =Messaging= data type contains network topology information which enables
+high-level messaging functions such as =neighbours=. Built on top of these
+high-level functions we can then provide analysis tools for distributed
+algorithms e.g. message/bit complexity.
 
 ** Network
    
@@ -63,38 +68,39 @@ topology" we mean the artificial network topology.
   data Network = Network { _nodes :: [Node], _edges :: Edges }
 #+end_src
 
-The =Edges= field provides us with the option of specifying the network
-topology. Either as a set of edges or as a network topology shorthand. The
-following code shows the specification of a simple ring consisting of five of
-the same hello world node. Each node is started on a local Docker container.
+The =Edges= provides us with the option of specifying the network topology.
+Either directly as a set of edges or as a network topology shorthand (which we
+then convert to edges). The following code shows the specification of a simple
+ring consisting of five of the same hello world node, where each node is started
+on a local Docker container.
 
 #+begin_src haskell
-  exampleNetwork = Network { _nodes = replicate 5 helloWorldOnDocker, _edges = Ring }
-
-  runExample :: IO ()
-  runExample = startNetwork exampleNetwork
+  exampleNetwork = Network {
+    _nodes = replicate 5 helloWorldOnDocker, _edges = Ring }
 #+end_src
 
-* Aims
+* Reaching Our Aims
    
 The overview above has described the core (and very simple architecture) of what
-is necessary to support the three aims at the top of this file. To support the
-management console aim we need to support the modification of the network, and
-provide a graphical layer (maybe with [[https://hackage.haskell.org/package/brick][brick]] including a network overview/map).
+is necessary to support the three aims at the top of this file.
+
+To support the management console aim we need to support the modification of the
+network, and provide a graphical layer (maybe with [[https://hackage.haskell.org/package/brick][brick]] to show a network
+overview/map).
 
 To reach the distributed algorithms research goal we just need to implement some
-algorithms. Doing so will reveal the building blocks we need, functions like
-=neighbours=, which returns a node's neighbours IDs. We can explore different
-abstractions for writing distributed algorithms. Perhaps start with a simple
-ring election algorithm maybe. For message passing, the integration of an
-Erlang-style message passing library like [[https://hackage.haskell.org/package/courier][courier]] may be useful.
+algorithms. Doing so will reveal the useful building blocks a distributed
+algorithms researcher needs, functions like =neighbours= (what are a running
+node's neighbours). Perhaps start with a simple ring election algorithm maybe.
+For message passing, the integration of an Erlang-style message passing library
+like [[https://hackage.haskell.org/package/courier][courier]] may be useful.
 
 Regarding the final aim we would like to provide abstractions/examples for
-dealing with distributed data. Distributed STM exists, can we integrate it,
-should we? What about distributed FRP as hinted at recently on this reddit
+dealing with distributed data. Distributed STM exists ([[https://hackage.haskell.org/package/DSTM][DSTM]]) can we integrate
+it, should we? What about distributed FRP as hinted at recently on this reddit
 [[https://www.reddit.com/r/haskell/comments/8g73hv/reactivebanana_or_other_frp_lib_for_networking/][thread]]. What about decentralized data?
 
-* Other Libraries
+* Existing Libraries
 
 Cloud Haskell and transient seem to be in a similar domain as disco. Though
 disco has a distinct focus on distributed algorithms research. Furthermore disco
@@ -103,12 +109,12 @@ reflected in our data types. We aim to offload a lot of functionality, such as
 Erlang-style message passing, to third-party libraries like courier.
 
 Distributed programming is given a rating of immature in the [[https://github.com/Gabriel439/post-rfc/blob/master/sotu.md#distributed-programming][state of the
-Haskell ecosystem ]]document. Quoting from the same document: "Work on the
+Haskell ecosystem]] document. Quoting from the same document: "Work on the
 higher-level libraries seems to have stopped, but the low-level libraries are
 still good for distributing computation." and "We need more analytics
 libraries".
 
-* Installing and running
+* Getting Started
 
 Install [[https://www.docker.com/get-docker][Docker]], [[https://docs.docker.com/compose][Docker Compose]], [[https://docs.haskellstack.org/en/stable/README][Stack]]. On macOS you can do:
 
@@ -120,18 +126,19 @@ Install [[https://www.docker.com/get-docker][Docker]], [[https://docs.docker.com
 Clone the project and install Haskell dependencies:
 
 #+begin_src bash
-  git clone git@github.com:barischrooneyj/disco && cd disco
-  stack build --install-ghc
+  git clone git@github.com:barischrooneyj/disco
+  cd disco && stack build --install-ghc  # Build Disco.
+  cd disco-docker && stack image container  # Build Docker 'Service'.
 #+end_src
 
-Start the Docker daemon, on macOS this is:
+Start the Docker daemon, on macOS:
 
 #+begin_src bash
   open -a docker
 #+end_src
 
-Open the disco console:
+Start a disco:
 
 #+begin_src bash
-  stack exec disco
+  stack exec disco-exe
 #+end_src

@@ -37,4 +37,3 @@ startNodes nodes = do
           container <- runDockerT (defaultClientOpts, httpHandler) createCommand
           putStrLn $ "\nCommand: " ++ show createOpts
           putStrLn $ "\nContainer: " ++ show container
-
