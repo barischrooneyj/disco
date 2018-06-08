@@ -5,14 +5,15 @@ module Start where
 -- NOTE: This code is hacky and will be changed soon, don't bother investing
 -- much time here.
 
-import           Data.Maybe           (fromJust)
-import qualified System.Directory     as Dir
-import           System.Exit          (ExitCode (..))
-import           System.FilePath      ((</>))
-import qualified System.Process.Typed as Proc
+import           Data.ByteString.Lazy.Char8 (unpack)
+import           Data.Maybe                 (fromJust)
+import qualified System.Directory           as Dir
+import           System.Exit                (ExitCode (..))
+import           System.FilePath            ((</>))
+import qualified System.Process.Typed       as Proc
 
-import           Network              (Edges (..), Network (..), Node (..),
-                                       Service (..))
+import           Network                    (Edges (..), Network (..),
+                                             Node (..), Service (..))
 
 -- | Start the given network!
 startNetwork :: Network -> IO ()
@@ -50,7 +51,7 @@ startCompleteGraphOld nodes = do
   print $ "Saved Dockerfile to: " ++ outFile
   (e, stdout, stderr) <- Proc.readProcess $
     Proc.proc "docker-compose" ["up"]
-  print $ case e of { ExitSuccess -> stdout; ExitFailure _ -> stderr }
+  putStrLn $ unpack $ case e of { ExitSuccess -> stdout; ExitFailure _ -> stderr }
 
 -- | A Dockerfile string with a node added.
 dockerfileWithNode :: String -> Node -> String
