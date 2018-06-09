@@ -11,15 +11,19 @@ data Network = Network { _nodes :: [Node], _edges :: Edges }
 
 -- | A network constructor where nodes are given new unique IDs.
 network :: Edges -> [Node] -> Network
-network edges nodes = Network { _nodes = newUniqueIDs nodes, _edges = edges }
+network edges nodes = Network { _nodes = newUniqueIds nodes, _edges = edges }
+
+-- | By convention identifiers start at 1.
+uniqueIds :: [NodeId]
+uniqueIds = [1..]
 
 -- | Nodes with new unique IDs.
-newUniqueIDs :: [Node] -> [Node]
-newUniqueIDs = zipWith applyNodeId [1..]
+newUniqueIds :: [Node] -> [Node]
+newUniqueIds = zipWith applyNodeId uniqueIds
   where applyNodeId nId n = n { _id = Just nId }
 
 -- | A simple type to compare nodes with.
-type NodeID = Int
+type NodeId = Int
 
 -- | A node represents a program in a network.
 data Node = Node {
@@ -27,13 +31,13 @@ data Node = Node {
     _exe     :: Exe
     -- | How to run this node.
   , _service :: Service
-    -- | An optional identifier.
-  , _id      :: Maybe NodeID
-    -- | Network information to enable messaging.
+    -- | A unique identifier set by Disco.
+  , _id      :: Maybe NodeId
+    -- | Network information set by Disco.
   , _netInfo :: Maybe Edges
   }
 
--- | A node constructor that avoids setting fields set later by 'network'.
+-- | A node constructor that avoids setting fields set later by Disco.
 node :: Service -> Exe -> Node
 node service exe = Node {
   _id = Nothing, _exe = exe, _service = service, _netInfo = Nothing }
@@ -44,27 +48,24 @@ data Edges =
     Edges [Edge]
     -- | Every pair of nodes can communicate directly.
   | CompleteGraph
-    -- | Every node can communicate with two neighbours in a ring.
+    -- | Every node can communicate with ID+1 and ID-1.
   | UndirectedRing
 
 -- | An edge is a directed channel from one node to another.
-data Edge = Edge { _from :: NodeID, _to :: NodeID }
+data Edge = Edge { _from :: NodeId, _to :: NodeId }
 
 -- | A service is capable of running nodes.
---
--- On boot the service should offload to the disco-boot function which is
--- capable of running the different 'Exe's.
 newtype Service = Service { _startNodes :: [Node] -> IO () }
 
--- | Description of an executable that a node can run.
+-- | Description of an program that a node can run.
 data Exe =
   -- | Download and install an executable from a git URL.
     Git { _url :: String, _exe :: String }
   -- | Download and install an executable from Hackage.
   | Hackage { _package :: String, _exe :: String }
-  -- | The node will run its service's default executable.
+  -- | Run a service-specific default program.
   | ServiceDefault
-  -- | A serializable distributed algorithm to run.
+  -- | Run the given distributed algorithm.
   | EAlgorithm Algorithm
   deriving (Read, Show)
 
@@ -73,9 +74,9 @@ data Exe =
 -- | A message passing interface that adheres to the network topology.
 data Messaging = Messaging {
     -- | Attempt to send a message to a node.
-    _send :: Message -> NodeID -> IO ()
+    _send :: Message -> NodeId -> IO ()
     -- | Register a handler for incoming messages.
-  , _recv :: (Message -> NodeID -> IO ()) -> IO ()
+  , _recv :: (Message -> NodeId -> IO ()) -> IO ()
   }
 
 -- | You can read/show messages yourself.

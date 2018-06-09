@@ -7,23 +7,44 @@ module Start where
 
 import           Data.ByteString.Lazy.Char8 (unpack)
 import           Data.Maybe                 (fromJust)
+import qualified Data.Set                   as Set
 import qualified System.Directory           as Dir
 import           System.Exit                (ExitCode (..))
 import           System.FilePath            ((</>))
 import qualified System.Process.Typed       as Proc
 
-import           Network                    (Edges (..), Network (..),
-                                             Node (..), Service (..))
+import           Network                    (Edge (..), Edges (..),
+                                             Network (..), Node (..), NodeId,
+                                             Service (..))
 
 -- | Start the given network!
 startNetwork :: Network -> IO ()
 startNetwork network =
-  case _edges network of
-    -- CompleteGraph   -> startCompleteGraph $ _nodes network
-    -- | Old Docker Compose version.
+  case _edges $ toStandardEdges network of
     CompleteGraph   -> startCompleteGraphOld $ _nodes network
-    UndirectedRing  -> print "NOTE: Undirected ring not implemented"
     Edges _setEdges -> print "NOTE: Set of edges not implemented"
+    _               -> print "NOTE: This is not a standard network"
+
+-- | A network in standard format does NOT use a shorthand for edges.
+toStandardEdges :: Network -> Network
+toStandardEdges network =
+  case _edges network of
+    UndirectedRing ->
+      let maxId = length $ _nodes network
+          edges = foldl
+            (\es n -> undirectedEdges (fromJust $ _id n) maxId ++ es)
+            []
+            (_nodes network)
+      in network { _edges = Edges edges }
+    -- | Otherwise already in standard format.
+    _ -> network
+
+-- | The edges for a node in an undirected ring.
+undirectedEdges :: NodeId -> NodeId -> [Edge]
+undirectedEdges nId maxId
+  | nId == 1     = [Edge nId maxId    , Edge nId $ nId + 1]
+  | nId == maxId = [Edge nId $ nId - 1, Edge nId 1        ]
+  | otherwise    = [Edge nId $ nId - 1, Edge nId $ nId + 1]
 
 -- | Start a complete graph.
 --
@@ -64,3 +85,13 @@ dockerfileWithNode dockerfile node =
       "    command: /usr/local/bin/disco-docker-exe",
       "    tty: true"
       ]
+
+-- | Service as a typeclass? ------------------------------------
+data LocalDocker
+
+class Service s where
+  _runNodes :: s -> [Node] -> IO ()
+
+instance Start.Service LocalDocker where
+  _runNodes = const startCompleteGraphOld
+-- | ------------------------------------------------------------
