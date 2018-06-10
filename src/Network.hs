@@ -4,25 +4,24 @@ module Network where
 
 -- * A model of a network and its nodes.
 
-import           Algorithm (Algorithm)
+import           Algorithm  (Algorithm)
+import           Data.Maybe (mapMaybe)
+import qualified Data.Set   as Set
 
--- | A network consists simply of nodes and edges. The edges define the
--- artificial network topology.
+-- | A network consists simply of nodes and edges.
 data Network = Network { _nodes :: [Node], _edges :: Edges }
 
--- | A network constructor where nodes are given new unique IDs. TODO: Only give
--- identifiers to node's without one.
-network :: Edges -> [Node] -> Network
-network edges nodes = Network { _nodes = newUniqueIds nodes, _edges = edges }
-
--- | By convention identifiers start at 1.
-uniqueIds :: [NodeId]
-uniqueIds = [1..]
-
--- | Nodes with new unique IDs.
-newUniqueIds :: [Node] -> [Node]
-newUniqueIds = zipWith applyNodeId uniqueIds
-  where applyNodeId nId n = n { _id = Just nId }
+-- | A smart network constructor where nodes without identifiers are assigned
+-- unique identifiers. Also if any given nodes have duplicate identifiers this
+-- function will fail.
+network :: Edges -> [Node] -> Maybe Network
+network edges nodes = do
+  let existingIds  = mapMaybe _id nodes
+      newIds       = filter (`notElem` existingIds) [1..]
+      nodesWithIds = zipWith (\n nId -> n { _id = Just nId }) nodes newIds
+  if   Set.size (Set.fromList existingIds) == length existingIds
+  then pure Network { _nodes = nodesWithIds, _edges = edges }
+  else fail "Duplicate node identifiers in network"
 
 -- | A simple type to compare nodes by.
 type NodeId = Int
