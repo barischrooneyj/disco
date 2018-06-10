@@ -10,7 +10,8 @@ import           Algorithm (Algorithm)
 -- artificial network topology.
 data Network = Network { _nodes :: [Node], _edges :: Edges }
 
--- | A network constructor where nodes are given new unique IDs.
+-- | A network constructor where nodes are given new unique IDs. TODO: Only give
+-- identifiers to node's without one.
 network :: Edges -> [Node] -> Network
 network edges nodes = Network { _nodes = newUniqueIds nodes, _edges = edges }
 
@@ -32,13 +33,16 @@ data Node = Node {
     _exe     :: Exe
     -- | Where to run the node.
   , _service :: Service
-    -- | A unique identifier set by Disco.
+    -- | A unique identifier, can be set later by Disco.
   , _id      :: Maybe NodeId
+    -- | Whether the node has access to its identifier.
+  , _anon    :: Bool
   }
 
 -- | A node constructor that avoids setting fields set later by Disco.
 node :: Service -> Exe -> Node
-node service exe = Node { _exe = exe, _service = service, _id = Nothing }
+node service exe = Node {
+  _exe = exe, _service = service, _id = Nothing, _anon = False }
 
 -- | Edges define the network topology and thus the communication channels.
 data Edges =
@@ -69,7 +73,7 @@ data Exe =
   -- | Run a service-specific default program.
   | ServiceDefault
   -- | Run the given distributed algorithm.
-  | EAlgorithm Algorithm
+  | ExeAlgorithm Algorithm
   deriving (Read, Show)
 
 -- ** NOTE: The code below is currently NOT used.

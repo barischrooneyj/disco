@@ -30,7 +30,7 @@ runExe exe =
     ServiceDefault -> do
       putStrLn "NOTE: Launching default executable"
       runServiceDefault
-    EAlgorithm alg -> putStrLn $ "NOTE: We cannot run algorithm:" ++ show alg
+    ExeAlgorithm alg -> putStrLn $ "NOTE: We cannot run algorithm:" ++ show alg
 
 -- | Run an informative example as a default.
 runServiceDefault :: IO ()

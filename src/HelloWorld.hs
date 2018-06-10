@@ -1,7 +1,7 @@
 module HelloWorld where
 
 import           Algorithm      (Algorithm (..))
-import           Network        (Edges (CompleteGraph), Exe (EAlgorithm),
+import           Network        (Edges (CompleteGraph), Exe (ExeAlgorithm),
                                  Network, Node, network, node)
 import           Service.Docker (localDocker)
 
@@ -13,4 +13,4 @@ helloWorldNetwork = network CompleteGraph $ replicate 1 helloWorldNode
 
 -- | A hello world node that runs in a local Docker container.
 helloWorldNode :: Node
-helloWorldNode = node localDocker $ EAlgorithm Foo
+helloWorldNode = node localDocker $ ExeAlgorithm Foo
