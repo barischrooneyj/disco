@@ -6,7 +6,8 @@ module Network where
 
 import           Algorithm (Algorithm)
 
--- | A network consists simply of nodes and edges.
+-- | A network consists simply of nodes and edges. The edges define the
+-- artificial network topology.
 data Network = Network { _nodes :: [Node], _edges :: Edges }
 
 -- | A network constructor where nodes are given new unique IDs.
@@ -22,27 +23,24 @@ newUniqueIds :: [Node] -> [Node]
 newUniqueIds = zipWith applyNodeId uniqueIds
   where applyNodeId nId n = n { _id = Just nId }
 
--- | A simple type to compare nodes with.
+-- | A simple type to compare nodes by.
 type NodeId = Int
 
 -- | A node represents a program in a network.
 data Node = Node {
     -- | The program to run.
     _exe     :: Exe
-    -- | How to run this node.
+    -- | Where to run the node.
   , _service :: Service
     -- | A unique identifier set by Disco.
   , _id      :: Maybe NodeId
-    -- | Network information set by Disco.
-  , _netInfo :: Maybe Edges
   }
 
 -- | A node constructor that avoids setting fields set later by Disco.
 node :: Service -> Exe -> Node
-node service exe = Node {
-  _id = Nothing, _exe = exe, _service = service, _netInfo = Nothing }
+node service exe = Node { _exe = exe, _service = service, _id = Nothing }
 
--- | Edges define communication within the artificial network.
+-- | Edges define the network topology and thus the communication channels.
 data Edges =
     -- | Explicit edges between pairs of nodes.
     Edges [Edge]
