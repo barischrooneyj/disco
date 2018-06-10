@@ -46,8 +46,13 @@ data Edges =
     Edges [Edge]
     -- | Every pair of nodes can communicate directly.
   | CompleteGraph
+    -- | Alternatively a shorthand may be specified.
+  | EdgesShorthand EdgesShorthand
+
+-- | Shorthand definitions for network topologies.
+data EdgesShorthand =
     -- | Every node can communicate with ID+1 and ID-1.
-  | UndirectedRing
+  UndirectedRing
 
 -- | An edge is a directed channel from one node to another.
 data Edge = Edge { _from :: NodeId, _to :: NodeId }

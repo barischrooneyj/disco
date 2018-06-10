@@ -7,13 +7,12 @@ module Start where
 
 import           Data.ByteString.Lazy.Char8 (unpack)
 import           Data.Maybe                 (fromJust)
-import qualified Data.Set                   as Set
 import qualified System.Directory           as Dir
 import           System.Exit                (ExitCode (..))
 import           System.FilePath            ((</>))
 import qualified System.Process.Typed       as Proc
 
-import           Network                    (Edge (..), Edges (..),
+import           Network                    (Edge (..), Edges (..), EdgesShorthand (..),
                                              Network (..), Node (..), NodeId,
                                              Service (..))
 
@@ -29,7 +28,7 @@ startNetwork network =
 toStandardEdges :: Network -> Network
 toStandardEdges network =
   case _edges network of
-    UndirectedRing ->
+    EdgesShorthand UndirectedRing ->
       let maxId = length $ _nodes network
           edges = foldl
             (\es n -> undirectedEdges (fromJust $ _id n) maxId ++ es)
