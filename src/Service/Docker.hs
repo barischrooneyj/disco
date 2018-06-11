@@ -31,7 +31,7 @@ startNodes nodes = do
 
   where startNode httpHandler node = do
           let containerConfig' = defaultContainerConfig $ pack "disco-docker"
-              containerName = pack $ "disco-docker" ++ show (fromJust $ _id node)
+              containerName = pack $ "disco-docker" ++ show (fromJust $ _identifier node)
               createOpts = CreateOpts containerConfig' defaultHostConfig
               createCommand = createContainer createOpts $ Just containerName
           container <- runDockerT (defaultClientOpts, httpHandler) createCommand

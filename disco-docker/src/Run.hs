@@ -9,18 +9,18 @@ module Run where
 import qualified System.Environment as Env
 import           System.Process
 
-import           Network            (Exe (..))
+import           Network            (Program (..))
 
 -- | Run the executable specified in the environment.
 run :: IO ()
 run = do
   exeString <- Env.getEnv "DISCODOCKERLAUNCH"
-  let exe = read exeString :: Exe
-  runExe exe
+  let exe = read exeString :: Program
+  runProgram exe
 
 -- | Run the given executable.
-runExe :: Exe -> IO ()
-runExe exe =
+runProgram :: Program -> IO ()
+runProgram exe =
   case exe of
     Git url exe' -> do
       putStrLn "NOTE: Git executables not supported"
@@ -30,7 +30,7 @@ runExe exe =
     ServiceDefault -> do
       putStrLn "NOTE: Launching default executable"
       runServiceDefault
-    ExeAlgorithm alg -> putStrLn $ "NOTE: We cannot run algorithm:" ++ show alg
+    Algorithm alg -> putStrLn $ "NOTE: We cannot run algorithm:" ++ show alg
 
 -- | Run an informative example as a default.
 runServiceDefault :: IO ()

@@ -19,24 +19,27 @@ import           Network                    (Edge (..), Edges (..), EdgesShortha
 -- | Start the given network!
 startNetwork :: Network -> IO ()
 startNetwork network =
-  case _edges $ toStandardEdges network of
-    CompleteGraph   -> startCompleteGraphOld $ _nodes network
-    Edges _setEdges -> print "NOTE: Set of edges not implemented"
-    _               -> print "NOTE: This is not a standard network"
+  let maybeNetwork = toStandardEdges network
+  in case maybeNetwork of
+    Nothing -> print "NOTE: Not a standard network"
+    Just standardNetwork -> case _edges standardNetwork of
+      Edges _setEdges -> print "NOTE: Set of edges not implemented"
+      _               -> print "NOTE: This is not a standard network"
 
 -- | A network in standard format does NOT use a shorthand for edges.
-toStandardEdges :: Network -> Network
+toStandardEdges :: Network -> Maybe Network
 toStandardEdges network =
   case _edges network of
     EdgesShorthand UndirectedRing ->
       let maxId = length $ _nodes network
           edges = foldl
-            (\es n -> undirectedEdges (fromJust $ _id n) maxId ++ es)
+            (\es n -> undirectedEdges (fromJust $ _identifier n) maxId ++ es)
             []
             (_nodes network)
-      in network { _edges = Edges edges }
+      in pure network { _edges = Edges edges }
+    EdgesShorthand _ -> Nothing
     -- | Otherwise already in standard format.
-    _ -> network
+    _ -> pure network
 
 -- | The edges for a node in an undirected ring.
 undirectedEdges :: NodeId -> NodeId -> [Edge]
@@ -58,14 +61,11 @@ startCompleteGraph nodes@(n:_) = _startNodes (_service n) nodes
 
 -- ** OLD!! Docker Compose code.
 
--- | Assign IDs to each node, if they don't have one.
-dockerfileHead :: String
-dockerfileHead = unlines ["version: '3'", "", "services:"]
-
 -- | Launch a complete (fully connected) network topology of nodes.
 startCompleteGraphOld :: [Node] -> IO ()
 startCompleteGraphOld nodes = do
-  let dockerfile = foldl dockerfileWithNode dockerfileHead nodes
+  let dockerfile =
+        foldl dockerfileWithNode (unlines ["version: '3'", "", "services:"]) nodes
   outFile <- (</> "cs/disco/docker-compose.yml") <$> Dir.getHomeDirectory
   writeFile outFile dockerfile
   print $ "Saved Dockerfile to: " ++ outFile
@@ -77,15 +77,16 @@ startCompleteGraphOld nodes = do
 dockerfileWithNode :: String -> Node -> String
 dockerfileWithNode dockerfile node =
   dockerfile ++ unlines [
-      "  disco-docker-" ++ show (fromJust $ _id node) ++ ":",
+      "  disco-docker-" ++ show (fromJust $ _identifier node) ++ ":",
       "    image: disco-docker",
       "    environment:",
-      "      - DISCODOCKERLAUNCH=" ++ show (_exe node),
+      "      - DISCODOCKERLAUNCH=" ++ show (_program node),
       "    command: /usr/local/bin/disco-docker-exe",
       "    tty: true"
       ]
 
--- | Service as a typeclass? ------------------------------------
+-- | Service as a typeclass rather than a data type ? -----------
+-- NOTE: Unused.
 data LocalDocker
 
 class Service s where
