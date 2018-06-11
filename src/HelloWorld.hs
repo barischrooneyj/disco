@@ -10,7 +10,7 @@ import           Service.Docker (localDocker)
 
 -- | A few hello world nodes on the same network.
 helloWorldNetwork :: Network
-helloWorldNetwork = fromJust $ network (EdgesShorthand CompleteGraph) $ replicate 1 helloWorldNode
+helloWorldNetwork = fromJust $ network (EdgesShorthand UndirectedRing) $ replicate 3 helloWorldNode
 
 -- | A hello world node that runs in a local Docker container.
 helloWorldNode :: Node

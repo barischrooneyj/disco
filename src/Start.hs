@@ -1,9 +1,6 @@
 module Start where
 
 -- * Start networks and nodes on services.
---
--- NOTE: This code is hacky and will be changed soon, don't bother investing
--- much time here.
 
 import           Data.ByteString.Lazy.Char8 (unpack)
 import           Data.Maybe                 (fromJust)
@@ -18,12 +15,15 @@ import           Network                    (Edge (..), Edges (..), EdgesShortha
 
 -- | Start the given network!
 startNetwork :: Network -> IO ()
-startNetwork network =
-  let maybeNetwork = toStandardEdges network
-  in case maybeNetwork of
+startNetwork network = do
+  print network
+  print $ toStandardEdges network
+  case toStandardEdges network of
     Nothing -> print "NOTE: Not a standard network"
     Just standardNetwork -> case _edges standardNetwork of
-      Edges _setEdges -> print "NOTE: Set of edges not implemented"
+      Edges _setEdges -> do
+        print "NOTE: We are not yet passing artificial network information to nodes"
+        startNodes $ _nodes standardNetwork
       _               -> print "NOTE: This is not a standard network"
 
 -- | A network in standard format does NOT use a shorthand for edges.
@@ -55,43 +55,7 @@ undirectedEdges nId maxId
 -- multiple services implemented we will ask each service to start the
 -- respective set of nodes, at this point our messaging functionality must be
 -- able to handle service boundaries.
-startCompleteGraph :: [Node] -> IO ()
-startCompleteGraph []          = print "No nodes to start complete graph"
-startCompleteGraph nodes@(n:_) = _startNodes (_service n) nodes
+startNodes :: [Node] -> IO ()
+startNodes []          = print "No nodes to start complete graph"
+startNodes nodes@(n:_) = _startNodes (_service n) nodes
 
--- ** OLD!! Docker Compose code.
-
--- | Launch a complete (fully connected) network topology of nodes.
-startCompleteGraphOld :: [Node] -> IO ()
-startCompleteGraphOld nodes = do
-  let dockerfile =
-        foldl dockerfileWithNode (unlines ["version: '3'", "", "services:"]) nodes
-  outFile <- (</> "cs/disco/docker-compose.yml") <$> Dir.getHomeDirectory
-  writeFile outFile dockerfile
-  print $ "Saved Dockerfile to: " ++ outFile
-  (e, stdout, stderr) <- Proc.readProcess $
-    Proc.proc "docker-compose" ["up"]
-  putStrLn $ unpack $ case e of { ExitSuccess -> stdout; ExitFailure _ -> stderr }
-
--- | A Dockerfile string with a node added.
-dockerfileWithNode :: String -> Node -> String
-dockerfileWithNode dockerfile node =
-  dockerfile ++ unlines [
-      "  disco-docker-" ++ show (fromJust $ _identifier node) ++ ":",
-      "    image: disco-docker",
-      "    environment:",
-      "      - DISCODOCKERLAUNCH=" ++ show (_program node),
-      "    command: /usr/local/bin/disco-docker-exe",
-      "    tty: true"
-      ]
-
--- | Service as a typeclass rather than a data type ? -----------
--- NOTE: Unused.
-data LocalDocker
-
-class Service s where
-  _runNodes :: s -> [Node] -> IO ()
-
-instance Start.Service LocalDocker where
-  _runNodes = const startCompleteGraphOld
--- | ------------------------------------------------------------

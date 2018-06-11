@@ -11,18 +11,15 @@ import           System.Process
 
 import           Network            (Program (..))
 
--- | Run the executable specified in the environment.
+-- | Run the program specified in the environment.
 run :: IO ()
-run = do
-  exeString <- Env.getEnv "DISCODOCKERLAUNCH"
-  let exe = read exeString :: Program
-  runProgram exe
+run = runProgram =<< read <$> Env.getEnv "DISCO_PROGRAM"
 
 -- | Run the given executable.
 runProgram :: Program -> IO ()
-runProgram exe =
-  case exe of
-    Git url exe' -> do
+runProgram program =
+  case program of
+    Git url program' -> do
       putStrLn "NOTE: Git executables not supported"
       clone <- readProcess ("git clone " ++ url) [] []
       print clone
@@ -33,6 +30,7 @@ runProgram exe =
     Algorithm alg -> putStrLn $ "NOTE: We cannot run algorithm:" ++ show alg
 
 -- | Run an informative example as a default.
+-- Useful to override this function for developing/debugging.
 runServiceDefault :: IO ()
 runServiceDefault =
   putStrLn "Node finished running"
