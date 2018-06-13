@@ -4,25 +4,27 @@ module Network where
 
 -- * A model of a network and its nodes.
 
-import           Algorithm  (Algorithm)
-import           Data.Maybe (mapMaybe)
-import qualified Data.Set   as Set
+import           Data.Graph.Generators (GraphInfo)
+import           Data.Maybe            (mapMaybe)
+import qualified Data.Set              as Set
+
+import           Algorithm             (Algorithm)
 
 -- | A network consists simply of nodes and edges.
 data Network = Network { _nodes :: [Node], _edges :: Edges }
   deriving Show
 
 -- | A smart network constructor where nodes without identifiers are assigned
--- unique identifiers. Also if any given nodes have duplicate identifiers this
--- function will fail.
+-- unique identifiers, increasing starting from 0. If any given nodes have
+-- duplicate identifiers this function will return Nothing.
 network :: Edges -> [Node] -> Maybe Network
 network edges nodes = do
   let existingIds  = mapMaybe _identifier nodes
-      newIds       = filter (`notElem` existingIds) [1..]
+      newIds       = filter (`notElem` existingIds) [0..]
       nodesWithIds = zipWith (\n nId -> n { _identifier = Just nId }) nodes newIds
   if   Set.size (Set.fromList existingIds) == length existingIds
   then pure Network { _nodes = nodesWithIds, _edges = edges }
-  else fail "Duplicate node identifiers in network"
+  else Nothing
 
 -- | A simple type to compare nodes by.
 type NodeId = Int
@@ -48,16 +50,8 @@ node service exe = Node {
 data Edges =
     -- | Explicit edges between pairs of nodes.
     Edges [Edge]
-    -- | Alternatively a shorthand may be specified.
-  | EdgesShorthand EdgesShorthand
-  deriving Show
-
--- | Shorthand definitions for network topologies.
-data EdgesShorthand =
-    -- | Every pair of nodes can communicate directly.
-    CompleteGraph
-    -- | Every node can communicate with ID+1 and ID-1 (wrapping around).
-  | UndirectedRing
+    -- | Or a graph description from the graph-generators library.
+  | Graph GraphInfo
   deriving Show
 
 -- | An edge is a directed channel from one node to another.
@@ -66,8 +60,6 @@ data Edge = Edge { _from :: NodeId, _to :: NodeId }
 
 -- | A service is capable of running nodes.
 newtype Service = Service { _startNodes :: [Node] -> IO () }
-
--- |TODO: Make service a typeclass.
 instance Show Service where
   show = const "Docker"
 
@@ -82,4 +74,3 @@ data Program =
   -- | Run the given distributed algorithm.
   | Algorithm Algorithm
   deriving (Read, Show)
-

@@ -26,6 +26,8 @@ dependencies:
 - docker
 - directory
 - filepath
+- graph-generators
+- pretty-simple
 - servant
 - servant-server
 - text

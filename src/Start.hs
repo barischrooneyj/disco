@@ -2,22 +2,16 @@ module Start where
 
 -- * Start networks and nodes on services.
 
-import           Data.ByteString.Lazy.Char8 (unpack)
-import           Data.Maybe                 (fromJust)
-import qualified System.Directory           as Dir
-import           System.Exit                (ExitCode (..))
-import           System.FilePath            ((</>))
-import qualified System.Process.Typed       as Proc
+import           Data.Graph.Generators (GraphInfo (..))
+import           Text.Pretty.Simple    (pPrint)
 
-import           Network                    (Edge (..), Edges (..), EdgesShorthand (..),
-                                             Network (..), Node (..), NodeId,
-                                             Service (..))
+import           Network               (Edge (..), Edges (..), Network (..),
+                                        Node (..), Service (..))
 
 -- | Start the given network!
 startNetwork :: Network -> IO ()
 startNetwork network = do
-  print network
-  print $ toStandardEdges network
+  pPrint $ toStandardEdges network
   case toStandardEdges network of
     Nothing -> print "NOTE: Not a standard network"
     Just standardNetwork -> case _edges standardNetwork of
@@ -30,25 +24,13 @@ startNetwork network = do
 toStandardEdges :: Network -> Maybe Network
 toStandardEdges network =
   case _edges network of
-    EdgesShorthand UndirectedRing ->
-      let maxId = length $ _nodes network
-          edges = foldl
-            (\es n -> undirectedEdges (fromJust $ _identifier n) maxId ++ es)
-            []
-            (_nodes network)
-      in pure network { _edges = Edges edges }
-    EdgesShorthand _ -> Nothing
+    Graph graphInfo ->
+      pure $ network { _edges = Edges generatorEdges }
+      where generatorEdges = map (uncurry Edge) (edges graphInfo)
     -- | Otherwise already in standard format.
-    _ -> pure network
+    _                        -> pure network
 
--- | The edges for a node in an undirected ring.
-undirectedEdges :: NodeId -> NodeId -> [Edge]
-undirectedEdges nId maxId
-  | nId == 1     = [Edge nId maxId    , Edge nId $ nId + 1]
-  | nId == maxId = [Edge nId $ nId - 1, Edge nId 1        ]
-  | otherwise    = [Edge nId $ nId - 1, Edge nId $ nId + 1]
-
--- | Start a complete graph.
+-- | Start running some nodes.
 --
 -- Currently this is done by starting all nodes on the service of the first
 -- node. This works because we know we have one service currently. When we have
